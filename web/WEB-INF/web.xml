@@ -12,6 +12,18 @@
         <servlet-name>ProcesarPedido</servlet-name>
         <servlet-class>controller.ProcesarPedido</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>LoginController</servlet-name>
+        <servlet-class>controller.LoginController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>RegistroController</servlet-name>
+        <servlet-class>controller.RegistroController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>RecuperarController</servlet-name>
+        <servlet-class>controller.RecuperarController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Acceso</servlet-name>
         <url-pattern>/Acceso</url-pattern>
@@ -23,5 +35,17 @@
     <servlet-mapping>
         <servlet-name>ProcesarPedido</servlet-name>
         <url-pattern>/ProcesarPedido</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LoginController</servlet-name>
+        <url-pattern>/LoginController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>RegistroController</servlet-name>
+        <url-pattern>/RegistroController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>RecuperarController</servlet-name>
+        <url-pattern>/RecuperarController</url-pattern>
     </servlet-mapping>
 </web-app>

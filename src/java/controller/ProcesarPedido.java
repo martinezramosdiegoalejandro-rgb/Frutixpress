@@ -12,10 +12,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import model.ClienteVO;
 import model.DetalleCarritoDAO;
 import model.DetalleCarritoVO;
+import model.ItemCarrito;
 import model.PedidoDAO;
 import model.PedidoVO;
 import model.ProductoDAO;
@@ -36,23 +39,108 @@ public class ProcesarPedido extends HttpServlet {
             return;
         }
 
-        // 1. Recibir parámetros del formulario de detalles
-        int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+        String accion = request.getParameter("accion"); // Captura si es "comprar", "carrito", "eliminar" o "pagar"
+
+        // =========================================================================
+        // NUEVO FLUJO D: PROCESAR EL PAGO DEL CARRITO COMPLETO
+        // =========================================================================
+        if ("pagar".equals(accion)) {
+            List<ItemCarrito> carrito = (List<ItemCarrito>) sesion.getAttribute("carrito");
+            
+            if (carrito != null && !carrito.isEmpty()) {
+                ProductoDAO prodDAO = new ProductoDAO();
+                
+                // 1. Recorremos los productos del carrito para restar el stock en la BD
+                for (ItemCarrito item : carrito) {
+                    int idProd = item.getProducto().getIdProducto();
+                    double cantComprada = item.getCantidad();
+                    
+                    // Descontamos el stock usando tu método existente
+                    prodDAO.restarStock(idProd, cantComprada);
+                }
+                
+                // 2. Limpiamos por completo el carrito de la sesión
+                sesion.removeAttribute("carrito");
+                
+                // 3. Redirigimos al JSP de éxito
+                response.sendRedirect("vistas/confirmacion_compra.jsp");
+            } else {
+                // Si intenta pagar con el carrito vacío, lo devolvemos a la tienda
+                response.sendRedirect("vistas/tienda.jsp");
+            }
+            return; // Corta la ejecución para evitar leer parámetros nulos abajo
+        }
+
+        // =========================================================================
+        // FLUJO C: ELIMINAR PRODUCTO DEL CARRITO
+        // =========================================================================
+        int idProducto = 0;
+        if (request.getParameter("idProducto") != null) {
+            idProducto = Integer.parseInt(request.getParameter("idProducto"));
+        }
+
+        if ("eliminar".equals(accion)) {
+            List<ItemCarrito> carrito = (List<ItemCarrito>) sesion.getAttribute("carrito");
+            
+            if (carrito != null) {
+                for (int i = 0; i < carrito.size(); i++) {
+                    if (carrito.get(i).getProducto().getIdProducto() == idProducto) {
+                        carrito.remove(i);
+                        break; 
+                    }
+                }
+                sesion.setAttribute("carrito", carrito);
+            }
+            response.sendRedirect("carrito.jsp");
+            return; 
+        }
+
+        // =========================================================================
+        // PARA LOS DEMÁS FLUJOS (Añadir/Comprar): Aquí SÍ se lee la cantidad
+        // =========================================================================
         double cantidad = Double.parseDouble(request.getParameter("cantidad"));
 
-        // Consultar el producto para obtener el precio unitario exacto
         ProductoDAO prodDAO = new ProductoDAO();
         ProductoVO prod = prodDAO.buscarPorId(idProducto);
 
         if (prod != null) {
             double precioUnitario = prod.getPrecio();
+
+            // =========================================================================
+            // FLUJO A: AÑADIR AL CARRITO 
+            // =========================================================================
+            if ("carrito".equals(accion)) {
+                List<ItemCarrito> carrito = (List<ItemCarrito>) sesion.getAttribute("carrito");
+                if (carrito == null) {
+                    carrito = new ArrayList<>();
+                }
+                
+                boolean existe = false;
+                for (ItemCarrito item : carrito) {
+                    if (item.getProducto().getIdProducto() == idProducto) {
+                        item.setCantidad(item.getCantidad() + cantidad);
+                        existe = true;
+                        break;
+                    }
+                }
+                
+                if (!existe) {
+                    carrito.add(new ItemCarrito(prod, cantidad));
+                }
+                
+                sesion.setAttribute("carrito", carrito);
+                response.sendRedirect("carrito.jsp");
+                return;
+            }
+
+            // =========================================================================
+            // FLUJO B: COMPRA DIRECTA
+            // =========================================================================
             double precioTotal = precioUnitario * cantidad;
 
-            // Formatear la fecha actual al estándar requerido por la BD ('2026-06-25 18:00:00')
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String fechaActual = sdf.format(new Date());
 
-            // 2. Transacción - Registrar Pedido (Usamos id_carrito = 1 de manera fija para las pruebas controladas)
             int idCarritoSimulado = 1; 
 
             PedidoVO pedido = new PedidoVO();
@@ -60,13 +148,12 @@ public class ProcesarPedido extends HttpServlet {
             pedido.setEstadoPedido("Pendiente");
             pedido.setPrecioTotal(precioTotal);
             pedido.setIdCarrito(idCarritoSimulado);
-            pedido.setIdRepartidor(null); // Pendiente por asignar asignación automática
+            pedido.setIdRepartidor(null);
 
             PedidoDAO pedDAO = new PedidoDAO();
             boolean pedidoOk = pedDAO.registrarPedido(pedido);
 
             if (pedidoOk) {
-                // 3. Registrar el Detalle de la compra en la tabla intermedia
                 DetalleCarritoVO detalle = new DetalleCarritoVO();
                 detalle.setIdProducto(idProducto);
                 detalle.setIdCarrito(idCarritoSimulado);
@@ -77,18 +164,16 @@ public class ProcesarPedido extends HttpServlet {
                 boolean detalleOk = detDAO.agregarProductoAlCarrito(detalle);
 
                 if (detalleOk) {
-                    // 4. Actualizar / Restar el Stock del inventario
                     boolean stockOk = prodDAO.restarStock(idProducto, cantidad);
                     
                     if (stockOk) {
-                        // ¡Éxito absoluto en toda la operación! Redirigimos a la pantalla de éxito
                         response.sendRedirect("vistas/confirmacion_compra.jsp");
                         return;
                     }
                 }
             }
             
-           response.sendRedirect("vistas/tienda.jsp?errorTransaccion=true");
+            response.sendRedirect("vistas/tienda.jsp?errorTransaccion=true");
         } else {
             response.sendRedirect("vistas/tienda.jsp");
         }

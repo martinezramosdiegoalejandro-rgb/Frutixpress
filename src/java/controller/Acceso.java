@@ -27,7 +27,7 @@ public class Acceso extends HttpServlet {
         
         // 2. Instanciar la lógica de negocio (DAO)
         ClienteDAO dao = new ClienteDAO();
-        ClienteVO cliente = dao.validarAcceso(txtUsuario, txtPass);
+        ClienteVO cliente = dao.validarLogin(txtUsuario, txtPass);
         
         // 3. Evaluar el resultado de la consulta
         if (cliente != null) {

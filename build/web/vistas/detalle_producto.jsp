@@ -69,22 +69,33 @@
                                     <input type="hidden" name="idProducto" value="<%= prod.getIdProducto() %>">
                                     
                                     <div class="input-field">
-    <i class="material-icons prefix">fitness_center</i> 
-    <input id="cantidad" name="cantidad" type="number" step="1.00" min="1.00" max="<%= prod.getStock() %>" class="validate" required>
-    <label for="cantidad">Cantidad a comprar (kg)</label>
-</div>
+                                        <i class="material-icons prefix">fitness_center</i> 
+                                        <input id="cantidad" name="cantidad" type="number" step="1.00" min="1.00" max="<%= prod.getStock() %>" class="validate" required>
+                                        <label for="cantidad">Cantidad (kg)</label>
+                                    </div>
                                     
                                     <div class="row" style="margin-top: 30px;">
-                                        <div class="col s12 l6">
-                                            <button type="submit" class="btn waves-effect waves-light light-green darken-3 btn-large style="width: 100%;">
-                                                Confirmar <i class="material-icons right">shopping_basket</i>
+                                        <!-- Botón 1: Añadir al Carrito -->
+                                        <div class="col s12 m6" style="margin-bottom: 10px;">
+                                            <button type="submit" name="accion" value="carrito" class="btn waves-effect waves-light orange darken-3 btn-large" style="width: 100%;">
+                                                Añadir <i class="material-icons right">add_shopping_cart</i>
                                             </button>
                                         </div>
-                                        <div class="col s12 l6 center-align" style="margin-top: 10px;">
-    <a href="vistas/tienda.jsp" class="waves-effect waves-red btn-flat btn-large red-text" style="width: 100%;">
-        Cancelar y Volver
-    </a>
-</div>
+                                        
+                                        <!-- Botón 2: Comprar Directamente -->
+                                        <div class="col s12 m6" style="margin-bottom: 10px;">
+                                            <button type="submit" name="accion" value="comprar" class="btn waves-effect waves-light light-green darken-3 btn-large" style="width: 100%;">
+                                                Comprar Ya <i class="material-icons right">credit_card</i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col s12 center-align">
+                                            <a href="vistas/tienda.jsp" class="waves-effect waves-red btn-flat red-text" style="width: 100%;">
+                                                Cancelar y Volver
+                                            </a>
+                                        </div>
                                     </div>
                                 </form>
                                 

@@ -38,7 +38,9 @@
             <div class="nav-wrapper container">
                 <a href="#" class="brand-logo light-green-text text-darken-1" style="font-weight: 500;">Frutixpress</a>
                 <ul id="nav-mobile" class="right hide-on-med-and-down">
-                    <li><a href="#"><i class="material-icons left">shopping_cart</i>Carrito</a></li>
+                    <li><a href="../carrito.jsp" class="valign-wrapper white-text" style="margin-right: 20px;">
+    <i class="material-icons left">shopping_cart</i> Carrito
+</a></li>
                     <li><a class="waves-effect waves-light btn red darken-2" href="../principal.jsp?logout=true">Salir</a></li>
                 </ul>
             </div>
